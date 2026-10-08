@@ -1,5 +1,5 @@
-import { openai } from "./openai";
-import { encodePng, pixelize, upscale } from "./pixelize";
+import { geminiApiKey } from "./openai";
+import { decodePng, encodePng, pixelize, upscale } from "./pixelize";
 import type { FileMap } from "./types";
 
 /**
@@ -12,7 +12,7 @@ import type { FileMap } from "./types";
  * hand-authored art — palette-limited, editable, tiny, and drawn with bake().
  */
 
-const IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL || "gpt-image-1-mini";
+const IMAGE_MODEL = process.env.GEMINI_IMAGE_MODEL || "gemini-3.1-flash-lite-image";
 
 /** Wraps the request in the constraints that survive being reduced to ~24px. */
 function imagePrompt(description: string, view: string): string {
@@ -23,8 +23,54 @@ function imagePrompt(description: string, view: string): string {
     "a small number of distinct colour areas, strong contrast between parts.",
     "No gradients, no soft shading, no blur, no drop shadow, no text, no watermark,",
     "no background scenery, no ground, no frame or border.",
-    "The subject fills the image, centred, whole body visible, isolated on a fully transparent background.",
+    "The subject is centred, whole body visible, on a perfectly flat pure green (#00FF00) background.",
   ].join(" ");
+}
+
+/** Gemini image models return an opaque canvas, so clear edge-connected chroma green. */
+function removeGreenBackground(png: Buffer): Buffer {
+  const bitmap = decodePng(png);
+  const { width, height, data } = bitmap;
+  if (data[3] < 255) return png;
+
+  const key = [data[0], data[1], data[2]];
+  const seen = new Uint8Array(width * height);
+  const queue = new Int32Array(width * height);
+  let head = 0;
+  let tail = 0;
+
+  const add = (x: number, y: number) => {
+    if (x < 0 || y < 0 || x >= width || y >= height) return;
+    const index = y * width + x;
+    if (seen[index]) return;
+    seen[index] = 1;
+    const offset = index * 4;
+    const distance = (data[offset] - key[0]) ** 2 + (data[offset + 1] - key[1]) ** 2 + (data[offset + 2] - key[2]) ** 2;
+    if (distance > 18_000) return;
+    data[offset + 3] = 0;
+    queue[tail++] = index;
+  };
+
+  for (let x = 0; x < width; x++) {
+    add(x, 0);
+    add(x, height - 1);
+  }
+  for (let y = 1; y < height - 1; y++) {
+    add(0, y);
+    add(width - 1, y);
+  }
+
+  while (head < tail) {
+    const index = queue[head++];
+    const x = index % width;
+    const y = Math.floor(index / width);
+    add(x - 1, y);
+    add(x + 1, y);
+    add(x, y - 1);
+    add(x, y + 1);
+  }
+
+  return encodePng(bitmap);
 }
 
 export interface GeneratedSprite {
@@ -52,20 +98,37 @@ export async function generateSprite(
     matchPalette = [] as string[],
   } = {}
 ): Promise<GeneratedSprite> {
-  const res = await openai().images.generate({
-    model: IMAGE_MODEL,
-    prompt: imagePrompt(description, view),
-    size: "1024x1024",
-    background: "transparent",
-    output_format: "png",
-    quality: "low", // detail is discarded by the downscale anyway
-    n: 1,
-  });
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(IMAGE_MODEL)}:generateContent`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": geminiApiKey(),
+      },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: imagePrompt(description, view) }] }],
+        generationConfig: {
+          responseModalities: ["IMAGE"],
+          imageConfig: { aspectRatio: "1:1", imageSize: "1K" },
+        },
+      }),
+    }
+  );
 
-  const b64 = res.data?.[0]?.b64_json;
-  if (!b64) throw new Error("The image model returned no image.");
+  const result = await response.json() as {
+    candidates?: { content?: { parts?: { inlineData?: { data?: string } }[] } }[];
+    error?: { message?: string };
+  };
+  if (!response.ok) {
+    throw new Error(result.error?.message || `Gemini image request failed (${response.status}).`);
+  }
+  const b64 = result.candidates?.flatMap((candidate) => candidate.content?.parts ?? [])
+    .find((part) => part.inlineData?.data)?.inlineData?.data;
+  if (!b64) throw new Error("The Gemini image model returned no image.");
 
-  const { sprite, preview } = pixelize(Buffer.from(b64, "base64"), {
+  const image = removeGreenBackground(Buffer.from(b64, "base64"));
+  const { sprite, preview } = pixelize(image, {
     width,
     height,
     colours,

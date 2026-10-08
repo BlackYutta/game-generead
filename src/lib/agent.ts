@@ -1,5 +1,5 @@
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
-import { openai } from "./openai";
+import { gemini } from "./openai";
 import { db, newId, now, plainAll } from "./db";
 import { addUsage, getGame } from "./games";
 import { COMPACTION_PROMPT, systemPrompt } from "./prompt";
@@ -182,7 +182,7 @@ async function maybeCompact(
 
   let summary: string;
   try {
-    const res = await openai().chat.completions.create({
+    const res = await gemini().chat.completions.create({
       model,
       messages: [
         { role: "system", content: COMPACTION_PROMPT },
@@ -280,13 +280,15 @@ ${diagnostics}
     let text = "";
     const calls: ToolCall[] = [];
 
-    const stream = await openai().chat.completions.create(
+    const stream = await gemini().chat.completions.create(
       {
         model,
         messages,
-        tools: TOOL_DEFS,
+        tools: TOOL_DEFS.map(({ function: fn, ...tool }) => {
+          const { strict: _strict, ...geminiFunction } = fn;
+          return { ...tool, function: geminiFunction };
+        }),
         tool_choice: "auto",
-        parallel_tool_calls: false,
         ...modelParams(model),
         stream: true,
         stream_options: { include_usage: true },

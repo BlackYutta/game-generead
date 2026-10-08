@@ -24,7 +24,7 @@ no asset pipeline.
 
 ## What it does
 
-You type *"a knight exploring a rain-soaked castle at dusk"*. An agent loads its game
+You type _"a knight exploring a rain-soaked castle at dusk"_. An agent loads its game
 design references, draws the knight with an image model, writes the physics, authors the
 levels, **runs the game to check it works**, **screenshots it to check it looks right**,
 and hands you something playable. You keep chatting to change anything — the jump height,
@@ -85,29 +85,29 @@ it before handing it over. These are real recordings of the published builds.
 <details>
 <summary><b>The prompts behind them</b></summary>
 
-> **Slipstream Circuit** — *"A top-down arcade racer on a closed circuit. You drive one car around a winding track for three laps against four rivals… the car should feel weighty: it builds speed, slides when you turn hard, and slows dramatically if you clip the grass."*
+> **Slipstream Circuit** — _"A top-down arcade racer on a closed circuit. You drive one car around a winding track for three laps against four rivals… the car should feel weighty: it builds speed, slides when you turn hard, and slows dramatically if you clip the grass."_
 
-> **Starcluck Squadron** — *"A Chicken Invaders style arcade shooter. You pilot a small ship along the bottom of the screen, shooting waves of chickens that descend in formation… every fourth wave is a giant chicken boss that lays egg-bombs you have to dodge."*
+> **Starcluck Squadron** — _"A Chicken Invaders style arcade shooter. You pilot a small ship along the bottom of the screen, shooting waves of chickens that descend in formation… every fourth wave is a giant chicken boss that lays egg-bombs you have to dodge."_
 
-> **Lawn Lineup** — *"A small lane defence game on a 5x5 lawn. Sunflowers make sun, peashooters shoot down their lane, zombies shamble in from the right. Five waves then a bucket-head boss zombie."*
+> **Lawn Lineup** — _"A small lane defence game on a 5x5 lawn. Sunflowers make sun, peashooters shoot down their lane, zombies shamble in from the right. Five waves then a bucket-head boss zombie."_
 
-> **Ember Run** — *"Collect the embers. Reach the lantern."*
+> **Ember Run** — _"Collect the embers. Reach the lantern."_
 
 </details>
 
 ## Features
 
-| | |
-|---|---|
-| 🎮 **Talk to build** | Describe a game in plain language and watch it appear in a live preview |
-| 🧠 **15 built-in skills** | Game feel, platformer physics, character art, scene composition, level design, procedural audio, balance and more — loaded on demand |
-| 🎨 **AI sprite generation** | Characters drawn by an image model, auto-outlined and reduced to a palette-limited pixel grid |
-| 🧪 **It playtests itself** | Runs a simulated minute of play, unit-tests the collision, and checks the rules actually fire |
-| 👀 **It looks at its own work** | Screenshots the running game in headless Chrome and critiques its own art |
-| 📸 **Show, don't tell** | Paste a screenshot into the chat, or grab the live frame in one click, to point at a problem |
-| 🕹️ **Public arcade** | Publish a game and anyone can play it, with saves and leaderboards |
-| 💸 **Token-aware** | File manifests instead of file contents, truncated tool results, automatic context compaction, live cost readout |
-| 🔒 **Sandboxed by design** | Games run on an opaque origin and can never touch your session |
+|                                 |                                                                                                                                      |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| 🎮 **Talk to build**            | Describe a game in plain language and watch it appear in a live preview                                                              |
+| 🧠 **15 built-in skills**       | Game feel, platformer physics, character art, scene composition, level design, procedural audio, balance and more — loaded on demand |
+| 🎨 **AI sprite generation**     | Characters drawn by an image model, auto-outlined and reduced to a palette-limited pixel grid                                        |
+| 🧪 **It playtests itself**      | Runs a simulated minute of play, unit-tests the collision, and checks the rules actually fire                                        |
+| 👀 **It looks at its own work** | Screenshots the running game in headless Chrome and critiques its own art                                                            |
+| 📸 **Show, don't tell**         | Paste a screenshot into the chat, or grab the live frame in one click, to point at a problem                                         |
+| 🕹️ **Public arcade**            | Publish a game and anyone can play it, with saves and leaderboards                                                                   |
+| 💸 **Token-aware**              | File manifests instead of file contents, truncated tool results, automatic context compaction, live cost readout                     |
+| 🔒 **Sandboxed by design**      | Games run on an opaque origin and can never touch your session                                                                       |
 
 ## Quickstart
 
@@ -198,7 +198,7 @@ page:
 ```js
 await GameSave.ready;
 const best = GameSave.get("best", 0);
-GameSave.set("best", score);              // server-backed when signed in
+GameSave.set("best", score); // server-backed when signed in
 const board = await GameSave.submitScore(score);
 ```
 
@@ -207,17 +207,19 @@ public is playing.
 
 ## Configuration
 
-| Variable | Default | Purpose |
-|---|---|---|
-| `OPENAI_API_KEY` | — | **Required.** |
-| `OPENAI_MODEL` | `gpt-5.1` | Model for new games, switchable per game |
-| `OPENAI_REASONING` | `medium` | Reasoning effort for GPT-5 models |
-| `OPENAI_IMAGE_MODEL` | `gpt-image-1-mini` | Sprite generation; needs transparency support |
-| `COMPACT_AT` | `48000` | Context tokens before older turns are summarised |
-| `KEEP_RECENT_TOKENS` | `14000` | Recent turns kept verbatim through a compaction |
-| `MAX_AGENT_STEPS` | `48` | Tool calls allowed per turn |
-| `DATA_DIR` | `./data` | Where the SQLite file lives |
-| `CHROME_PATH` | auto | Browser used for screenshots |
+| Variable             | Default                       | Purpose                                                                   |
+| -------------------- | ----------------------------- | ------------------------------------------------------------------------- |
+| `GEMINI_API_KEY`     | —                             | **Required.** Create a key in Google AI Studio and add it to `.env`.      |
+| `GEMINI_MODEL`       | `gemini-3.8-flash`            | Default model for new games, switchable per game; free-tier quota applies |
+| `GEMINI_REASONING`   | `medium`                      | Reasoning effort for supported Gemini reasoning models                    |
+| `GEMINI_IMAGE_MODEL` | `gemini-3.1-flash-lite-image` | Sprite generation model; image generation may require paid API access     |
+| `COMPACT_AT`         | `48000`                       | Context tokens before older turns are summarised                          |
+| `KEEP_RECENT_TOKENS` | `14000`                       | Recent turns kept verbatim through a compaction                           |
+| `MAX_AGENT_STEPS`    | `48`                          | Tool calls allowed per turn                                               |
+| `DATA_DIR`           | `./data`                      | Where the SQLite file lives                                               |
+| `CHROME_PATH`        | auto                          | Browser used for screenshots                                              |
+
+The editor's cost readout estimates paid-tier token rates. Chat requests may be free within the Gemini API free-tier quota; image generation is separate and may require paid access.
 
 ## Project layout
 
@@ -241,9 +243,8 @@ src/lib/
 
 ## Limitations
 
-- Game quality tracks model strength, and the gap is large. `gpt-5.1` plans, loads the
-  right references and edits surgically. The 4.x models are cheaper and fine for tweaks,
-  but on a from-scratch build they tend to rewrite files and chase errors one at a time.
+- Game quality tracks model strength. Gemini models vary in speed and ability, while the
+  agent's tools, streamed responses, and context compaction work with Gemini.
 - The playtest drives a keyboard, so it verifies keyboard games far better than
   mouse-driven ones.
 - Single-node by design: SQLite on local disk, sessions in the same database.

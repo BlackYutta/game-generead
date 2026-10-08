@@ -54,7 +54,7 @@ function migrate(db: DatabaseSync) {
       -- The preview iframe runs on an opaque origin, so it sends no cookies.
       -- This unguessable key is what authorises draft file reads instead.
       preview_key   TEXT NOT NULL DEFAULT '',
-      model         TEXT NOT NULL DEFAULT 'gpt-4.1-mini',
+      model         TEXT NOT NULL DEFAULT 'gemini-3.8-flash',
       summary       TEXT NOT NULL DEFAULT '',
       thumbnail     TEXT,
       play_count    INTEGER NOT NULL DEFAULT 0,
@@ -133,6 +133,10 @@ function migrate(db: DatabaseSync) {
       PRIMARY KEY (game_id, user_id)
     );
   `);
+
+  db.prepare("UPDATE games SET model = ? WHERE model LIKE 'gpt-%'").run(
+    process.env.GEMINI_MODEL || "gemini-3.8-flash"
+  );
 }
 
 /**

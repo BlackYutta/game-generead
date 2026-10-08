@@ -2,10 +2,9 @@ import { db, newId, now, plain, plainAll, slugify } from "./db";
 import { STARTER_FILES, STARTER_SUMMARY } from "./template";
 import type { FileMap, Game, Visibility } from "./types";
 
-// GPT-5.1 by default: it plans, loads the right references and edits surgically
-// instead of rewriting, which is most of the gap in finished-game quality.
-// Override with OPENAI_MODEL, or switch per game in the editor.
-export const DEFAULT_MODEL = process.env.OPENAI_MODEL || "gpt-5.1";
+// Gemini 3.8 Flash is available on the Gemini API free tier and supports tools.
+// Override with GEMINI_MODEL, or switch per game in the editor.
+export const DEFAULT_MODEL = process.env.GEMINI_MODEL || "gemini-3.8-flash";
 
 /** Marquee colour. Deterministic per game so a cabinet always looks the same. */
 function hueFromId(id: string): number {

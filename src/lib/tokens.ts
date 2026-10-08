@@ -36,33 +36,25 @@ export function truncate(text: string, max = MAX_TOOL_RESULT_CHARS): string {
 
 /** Rough USD, for the editor's cost readout. Per 1M tokens. */
 const PRICES: Record<string, { in: number; cached: number; out: number }> = {
-  "gpt-5.1": { in: 1.25, cached: 0.125, out: 10.0 },
-  "gpt-4.1-mini": { in: 0.4, cached: 0.1, out: 1.6 },
-  "gpt-4.1-nano": { in: 0.1, cached: 0.025, out: 0.4 },
-  "gpt-4o-mini": { in: 0.15, cached: 0.075, out: 0.6 },
-  "gpt-4.1": { in: 2.0, cached: 0.5, out: 8.0 },
+  "gemini-3.8-flash": { in: 0.75, cached: 0.075, out: 3.75 },
+  "gemini-3.5-flash-lite": { in: 0.3, cached: 0.03, out: 2.5 },
 };
 
 export function estimateCost(model: string, prompt: number, output: number, cached = 0): number {
-  const p = PRICES[model] ?? PRICES["gpt-4.1-mini"];
+  const p = PRICES[model] ?? PRICES["gemini-3.5-flash-lite"];
   const fresh = Math.max(0, prompt - cached);
   return (fresh * p.in + cached * p.cached + output * p.out) / 1_000_000;
 }
 
 export const MODEL_CHOICES = [
-  { id: "gpt-5.1", label: "GPT-5.1", note: "Best games by a wide margin. Slower, ~8x the cost." },
-  { id: "gpt-4.1", label: "4.1", note: "Strong. Good middle ground." },
-  { id: "gpt-4.1-mini", label: "4.1 mini", note: "Cheap and quick. Fine for tweaks." },
-  { id: "gpt-4o-mini", label: "4o mini", note: "Cheapest. Weakest at multi-file edits." },
+  { id: "gemini-3.8-flash", label: "Gemini 3.8 Flash", note: "Strong agentic coding, available on the free tier." },
+  { id: "gemini-3.5-flash-lite", label: "Gemini 3.5 Flash-Lite", note: "Faster lightweight model, available on the free tier." },
 ] as const;
 
-/**
- * GPT-5 models reason before answering and reject the sampling knobs the 4.x
- * models expect; everything else takes a low temperature instead.
- */
+/** Gemini 2.5+ and 3.x reasoning models accept reasoning_effort via compatibility API. */
 export function modelParams(model: string): Record<string, unknown> {
-  if (/^gpt-5/.test(model)) {
-    return { reasoning_effort: process.env.OPENAI_REASONING || "medium" };
+  if (/^gemini-(2\.5|3\.[678])/.test(model)) {
+    return { reasoning_effort: process.env.GEMINI_REASONING || "medium" };
   }
   return { temperature: 0.4 };
 }

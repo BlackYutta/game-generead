@@ -6,11 +6,19 @@ import OpenAI from "openai";
  */
 let client: OpenAI | null = null;
 
-export function openai(): OpenAI {
-  const key = process.env.OPENAI_API_KEY || process.env.openai_api;
+export function geminiApiKey(): string {
+  const key = process.env.GEMINI_API_KEY;
   if (!key) {
-    throw new Error("No OpenAI API key configured. Add OPENAI_API_KEY to .env and restart the server.");
+    throw new Error("No Gemini API key configured. Add GEMINI_API_KEY to .env and restart the server.");
   }
-  client ??= new OpenAI({ apiKey: key });
+  return key;
+}
+
+export function gemini(): OpenAI {
+  const key = geminiApiKey();
+  client ??= new OpenAI({
+    apiKey: key,
+    baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
+  });
   return client;
 }
